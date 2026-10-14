@@ -37,3 +37,43 @@ CREATE TABLE forms (
         FOREIGN KEY (creator_id) REFERENCES users (user_id)
         ON DELETE SET NULL
 ) ENGINE = InnoDB;
+
+-- Questions of a form; order is defined by position
+CREATE TABLE questions (
+    question_id   INT           NOT NULL AUTO_INCREMENT,
+    form_id       INT           NOT NULL,
+    question_text TEXT          NOT NULL,
+    points        DECIMAL(5, 2) NOT NULL DEFAULT 0,
+    position      INT           NOT NULL DEFAULT 0,
+    PRIMARY KEY (question_id),
+    CONSTRAINT fk_questions_form
+        FOREIGN KEY (form_id) REFERENCES forms (form_id)
+        ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- Answer options of a question; several can be correct
+CREATE TABLE answer_options (
+    option_id   INT          NOT NULL AUTO_INCREMENT,
+    question_id INT          NOT NULL,
+    option_text VARCHAR(500) NOT NULL,
+    is_correct  TINYINT(1)   NOT NULL DEFAULT 0,
+    position    INT          NOT NULL DEFAULT 0,
+    PRIMARY KEY (option_id),
+    CONSTRAINT fk_options_question
+        FOREIGN KEY (question_id) REFERENCES questions (question_id)
+        ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- Access to restricted forms, granted by the author to registered users
+CREATE TABLE access (
+    form_id    INT         NOT NULL,
+    user_id    INT         NOT NULL,
+    granted_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (form_id, user_id),
+    CONSTRAINT fk_access_form
+        FOREIGN KEY (form_id) REFERENCES forms (form_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_access_user
+        FOREIGN KEY (user_id) REFERENCES users (user_id)
+        ON DELETE CASCADE
+) ENGINE = InnoDB;
