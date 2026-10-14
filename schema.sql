@@ -77,3 +77,40 @@ CREATE TABLE access (
         FOREIGN KEY (user_id) REFERENCES users (user_id)
         ON DELETE CASCADE
 ) ENGINE = InnoDB;
+
+-- Attempts to take a form; user_id is NULL after the user is deleted
+CREATE TABLE attempts (
+    attempt_id   INT           NOT NULL AUTO_INCREMENT,
+    form_id      INT           NOT NULL,
+    user_id      INT           NULL,
+    started_at   DATETIME(6)   NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    completed_at DATETIME(6)   NULL DEFAULT NULL,
+    score        DECIMAL(8, 2) NULL DEFAULT NULL,
+    status       ENUM ('in_progress', 'completed') NOT NULL DEFAULT 'in_progress',
+    PRIMARY KEY (attempt_id),
+    CONSTRAINT fk_attempts_form
+        FOREIGN KEY (form_id) REFERENCES forms (form_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_attempts_user
+        FOREIGN KEY (user_id) REFERENCES users (user_id)
+        ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+-- Options selected in an attempt (one row per selected option)
+CREATE TABLE user_answers (
+    answer_id   INT NOT NULL AUTO_INCREMENT,
+    attempt_id  INT NOT NULL,
+    question_id INT NOT NULL,
+    option_id   INT NOT NULL,
+    PRIMARY KEY (answer_id),
+    UNIQUE KEY uq_user_answers_attempt_option (attempt_id, option_id),
+    CONSTRAINT fk_user_answers_attempt
+        FOREIGN KEY (attempt_id) REFERENCES attempts (attempt_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_user_answers_question
+        FOREIGN KEY (question_id) REFERENCES questions (question_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_user_answers_option
+        FOREIGN KEY (option_id) REFERENCES answer_options (option_id)
+        ON DELETE CASCADE
+) ENGINE = InnoDB;
