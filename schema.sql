@@ -114,3 +114,9 @@ CREATE TABLE user_answers (
         FOREIGN KEY (option_id) REFERENCES answer_options (option_id)
         ON DELETE CASCADE
 ) ENGINE = InnoDB;
+
+-- Service user for anonymous attempts
+-- email '-' is not a valid address and password '!' is an unusable password in Django,
+-- so nobody can register or log in as Anonymous
+INSERT INTO users (username, email, password_hash, is_staff)
+VALUES ('Anonymous', '-', '!', 0);
