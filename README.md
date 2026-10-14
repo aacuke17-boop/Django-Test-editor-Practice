@@ -1,1 +1,1 @@
-# Django-Test-editor-Practice
+# Web application for creating surveys and tests (Django + MySQL).
