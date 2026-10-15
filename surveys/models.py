@@ -25,3 +25,45 @@ class Questionnaire(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Question(models.Model):
+    question_id = models.AutoField(primary_key=True)
+    form = models.ForeignKey(
+        Questionnaire,
+        on_delete=models.CASCADE,
+        db_column="form_id",
+        related_name="questions",
+    )
+    question_text = models.TextField()
+    points = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    position = models.IntegerField(default=0)
+
+    class Meta:
+        managed = False
+        db_table = "questions"
+        ordering = ["position", "question_id"]
+
+    def __str__(self):
+        return self.question_text
+
+
+class AnswerOption(models.Model):
+    option_id = models.AutoField(primary_key=True)
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        db_column="question_id",
+        related_name="options",
+    )
+    option_text = models.CharField(max_length=500)
+    is_correct = models.BooleanField(default=False)
+    position = models.IntegerField(default=0)
+
+    class Meta:
+        managed = False
+        db_table = "answer_options"
+        ordering = ["position", "option_id"]
+
+    def __str__(self):
+        return self.option_text
