@@ -67,3 +67,26 @@ class AnswerOption(models.Model):
 
     def __str__(self):
         return self.option_text
+
+class Access(models.Model):
+    pk = models.CompositePrimaryKey("form_id", "user_id")
+    form = models.ForeignKey(
+        Questionnaire,
+        on_delete=models.CASCADE,
+        db_column="form_id",
+        related_name="access_entries",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        db_column="user_id",
+        related_name="access_entries",
+    )
+    granted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = "access"
+
+    def __str__(self):
+        return f"{self.user} -> {self.form}"
