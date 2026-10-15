@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Questionnaire(models.Model):
@@ -68,6 +69,7 @@ class AnswerOption(models.Model):
     def __str__(self):
         return self.option_text
 
+
 class Access(models.Model):
     pk = models.CompositePrimaryKey("form_id", "user_id")
     form = models.ForeignKey(
@@ -90,3 +92,72 @@ class Access(models.Model):
 
     def __str__(self):
         return f"{self.user} -> {self.form}"
+
+
+class Attempt(models.Model):
+    STATUS_IN_PROGRESS = "in_progress"
+    STATUS_COMPLETED = "completed"
+    STATUS_CHOICES = [
+        (STATUS_IN_PROGRESS, "In progress"),
+        (STATUS_COMPLETED, "Completed"),
+    ]
+
+    attempt_id = models.AutoField(primary_key=True)
+    form = models.ForeignKey(
+        Questionnaire,
+        on_delete=models.CASCADE,
+        db_column="form_id",
+        related_name="attempts",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        db_column="user_id",
+        related_name="attempts",
+    )
+    started_at = models.DateTimeField(default=timezone.now)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    score = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_IN_PROGRESS,
+    )
+
+    class Meta:
+        managed = False
+        db_table = "attempts"
+
+    def __str__(self):
+        return f"Attempt {self.attempt_id} ({self.status})"
+
+
+class UserAnswer(models.Model):
+    answer_id = models.AutoField(primary_key=True)
+    attempt = models.ForeignKey(
+        Attempt,
+        on_delete=models.CASCADE,
+        db_column="attempt_id",
+        related_name="answers",
+    )
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        db_column="question_id",
+        related_name="user_answers",
+    )
+    option = models.ForeignKey(
+        AnswerOption,
+        on_delete=models.CASCADE,
+        db_column="option_id",
+        related_name="user_answers",
+    )
+
+    class Meta:
+        managed = False
+        db_table = "user_answers"
+
+    def __str__(self):
+        return f"Answer {self.answer_id} (attempt {self.attempt_id})"
