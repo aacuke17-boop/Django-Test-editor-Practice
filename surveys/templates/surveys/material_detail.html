@@ -4,4 +4,18 @@
 
 {% block content %}
     <h1>{{ material.title }}</h1>
+    <p>
+        <strong>Type:</strong> {% if material.is_test %}Test{% else %}Survey{% endif %}<br>
+        <strong>Author:</strong> {% if material.creator %}{{ material.creator.username }}{% else %}Deleted user{% endif %}
+    </p>
+
+    {% if material.description %}
+        {{ material.description|linebreaks }}
+    {% else %}
+        <p>No description.</p>
+    {% endif %}
+
+    <button type="button" disabled>Start</button>
+
+    <p><a href="{% url 'home' %}">Back to all materials</a></p>
 {% endblock %}
