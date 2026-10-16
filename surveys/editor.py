@@ -59,6 +59,7 @@ def parse_questions(post):
 
 
 def save_questions(material, questions):
+    is_test = material.is_test
     position = 0
     for item in questions:
         if not item["text"]:
@@ -67,7 +68,7 @@ def save_questions(material, questions):
         question = Question.objects.create(
             form=material,
             question_text=item["text"],
-            points=parse_points(item["points"]),
+            points=parse_points(item["points"]) if is_test else Decimal("0"),
             position=position,
         )
         option_position = 0
@@ -78,6 +79,6 @@ def save_questions(material, questions):
             AnswerOption.objects.create(
                 question=question,
                 option_text=option["text"],
-                is_correct=option["correct"],
+                is_correct=bool(option["correct"]) and is_test,
                 position=option_position,
             )

@@ -6,10 +6,18 @@
         var addQuestionButton = document.getElementById("add-question");
         var questionTemplate = document.getElementById("question-template");
         var optionTemplate = document.getElementById("option-template");
+        var isTestCheckbox = document.getElementById("id_is_test");
 
         function renumber() {
             list.querySelectorAll(".question-block").forEach(function (block, i) {
                 block.querySelector(".question-number").textContent = String(i + 1);
+            });
+        }
+
+        function applyTestMode() {
+            var isTest = isTestCheckbox ? isTestCheckbox.checked : true;
+            list.querySelectorAll(".points-field, .correct-field").forEach(function (element) {
+                element.hidden = !isTest;
             });
         }
 
@@ -29,6 +37,7 @@
             var html = questionTemplate.innerHTML.replaceAll("__index__", String(index));
             list.insertAdjacentHTML("beforeend", html);
             renumber();
+            applyTestMode();
         });
 
         list.addEventListener("click", function (event) {
@@ -49,6 +58,7 @@
                     .replaceAll("__qindex__", questionIndex)
                     .replaceAll("__oindex__", String(optionIndex));
                 optionsList.insertAdjacentHTML("beforeend", html);
+                applyTestMode();
             } else if (target.classList.contains("remove-option")) {
                 var optionBlock = target.closest(".option-block");
                 if (optionBlock) {
@@ -57,7 +67,12 @@
             }
         });
 
+        if (isTestCheckbox) {
+            isTestCheckbox.addEventListener("change", applyTestMode);
+        }
+
         renumber();
+        applyTestMode();
     }
 
     document.addEventListener("DOMContentLoaded", function () {
