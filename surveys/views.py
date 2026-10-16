@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
 
 from .models import Questionnaire
@@ -24,3 +25,9 @@ def material_detail(request, pk):
         pk=pk,
     )
     return render(request, "surveys/material_detail.html", {"material": material})
+
+
+@login_required
+def my_materials(request):
+    materials = Questionnaire.objects.filter(creator=request.user).order_by("-creation_time")
+    return render(request, "surveys/my_materials.html", {"materials": materials})

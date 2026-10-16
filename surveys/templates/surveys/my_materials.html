@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}My materials - Questionnaires{% endblock %}
+
+{% block content %}
+    <h1>My materials</h1>
+
+    {% if materials %}
+        <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Access</th>
+                    <th>Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for material in materials %}
+                    <tr>
+                        <td><a href="{% url 'material_detail' material.pk %}">{{ material.title }}</a></td>
+                        <td>{% if material.is_test %}Test{% else %}Survey{% endif %}</td>
+                        <td>{% if material.restricted_access %}Restricted{% else %}Public{% endif %}</td>
+                        <td>{{ material.update_time|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have not created any materials yet.</p>
+    {% endif %}
+{% endblock %}
