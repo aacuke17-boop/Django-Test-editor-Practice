@@ -5,6 +5,10 @@ from .forms import QuestionnaireForm
 from .models import Questionnaire
 
 
+def get_own_material(request, pk):
+    return get_object_or_404(Questionnaire, pk=pk, creator=request.user)
+
+
 def home(request):
     query = request.GET.get("q", "").strip()
     materials = (
@@ -55,3 +59,20 @@ def material_create(request):
     else:
         form = QuestionnaireForm()
     return render(request, "surveys/material_editor.html", {"form": form})
+
+
+@login_required
+def material_edit(request, pk):
+    material = get_own_material(request, pk)
+    if request.method == "POST":
+        form = QuestionnaireForm(request.POST, instance=material)
+        if form.is_valid():
+            form.save()
+            return redirect("my_materials")
+    else:
+        form = QuestionnaireForm(instance=material)
+    return render(
+        request,
+        "surveys/material_editor.html",
+        {"form": form, "material": material},
+    )

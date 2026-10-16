@@ -6,5 +6,6 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("materials/new/", views.material_create, name="material_create"),
     path("materials/<int:pk>/", views.material_detail, name="material_detail"),
+    path("materials/<int:pk>/edit/", views.material_edit, name="material_edit"),
     path("my-materials/", views.my_materials, name="my_materials"),
 ]
