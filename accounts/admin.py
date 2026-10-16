@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import User
+from .models import ANONYMOUS_EMAIL, User
 
 
 @admin.register(User)
@@ -14,3 +14,13 @@ class UserAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    def has_change_permission(self, request, obj=None):
+        if obj is not None and obj.email == ANONYMOUS_EMAIL:
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and obj.email == ANONYMOUS_EMAIL:
+            return False
+        return super().has_delete_permission(request, obj)

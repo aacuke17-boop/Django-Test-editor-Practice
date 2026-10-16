@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from .managers import UserManager
 
+ANONYMOUS_EMAIL = "-"
 
 class User(AbstractBaseUser):
     user_id = models.AutoField(primary_key=True)
