@@ -9,6 +9,10 @@ class RegistrationForm(forms.Form):
     email = forms.EmailField(max_length=254)
     username = forms.CharField(max_length=150)
     password = forms.CharField(widget=forms.PasswordInput)
+    password_confirm = forms.CharField(
+        label="Confirm password",
+        widget=forms.PasswordInput,
+    )
 
     def clean_email(self):
         email = User.objects.normalize_email(self.cleaned_data["email"])
@@ -26,6 +30,14 @@ class RegistrationForm(forms.Form):
         password = self.cleaned_data["password"]
         validate_password(password)
         return password
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm = cleaned_data.get("password_confirm")
+        if password and confirm and password != confirm:
+            self.add_error("password_confirm", "Passwords do not match.")
+        return cleaned_data
 
     def save(self):
         return User.objects.create_user(
