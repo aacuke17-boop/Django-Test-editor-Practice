@@ -5,6 +5,8 @@
 {% block content %}
     <h1>My materials</h1>
 
+    <p><a href="{% url 'material_create' %}">Create material</a></p>
+
     <form method="get" action="{% url 'my_materials' %}">
         <input type="text" name="q" value="{{ query }}" placeholder="Search by title or description">
         <button type="submit">Search</button>

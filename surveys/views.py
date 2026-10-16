@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 
+from .forms import QuestionnaireForm
 from .models import Questionnaire
 
 
@@ -40,3 +41,17 @@ def my_materials(request):
         "surveys/my_materials.html",
         {"materials": materials, "query": query},
     )
+
+
+@login_required
+def material_create(request):
+    if request.method == "POST":
+        form = QuestionnaireForm(request.POST)
+        if form.is_valid():
+            material = form.save(commit=False)
+            material.creator = request.user
+            material.save()
+            return redirect("my_materials")
+    else:
+        form = QuestionnaireForm()
+    return render(request, "surveys/material_editor.html", {"form": form})
