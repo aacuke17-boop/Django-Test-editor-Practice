@@ -1,0 +1,9 @@
+<div class="option-block" style="margin-bottom: 4px;">
+    <input type="hidden" name="q{{ qindex }}_option_index" value="{{ option.index }}">
+    <input type="text" name="q{{ qindex }}_o{{ option.index }}_text" value="{{ option.text }}" placeholder="Option text" size="50" maxlength="500">
+    <label class="correct-field">
+        <input type="checkbox" name="q{{ qindex }}_o{{ option.index }}_correct"{% if option.correct %} checked{% endif %}>
+        Correct
+    </label>
+    <button type="button" class="remove-option">Remove</button>
+</div>

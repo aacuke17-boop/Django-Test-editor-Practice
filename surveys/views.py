@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .editor import blank_question, parse_questions, save_questions
+from .editor import blank_option, blank_question, parse_questions, save_questions
 from .forms import QuestionnaireForm
 from .models import Questionnaire
 
@@ -71,6 +71,7 @@ def material_create(request):
             "form": form,
             "questions": questions,
             "blank_question": blank_question("__index__"),
+            "blank_option": blank_option("__oindex__"),
         },
     )
 

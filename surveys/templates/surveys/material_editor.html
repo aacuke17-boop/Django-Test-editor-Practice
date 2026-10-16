@@ -23,6 +23,10 @@
             <template id="question-template">
                 {% include "surveys/_question_block.html" with question=blank_question %}
             </template>
+
+            <template id="option-template">
+                {% include "surveys/_option_block.html" with qindex="__qindex__" option=blank_option %}
+            </template>
         {% endif %}
 
         <p>
