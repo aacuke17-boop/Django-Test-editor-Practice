@@ -5,6 +5,14 @@
 {% block content %}
     <h1>My materials</h1>
 
+    <form method="get" action="{% url 'my_materials' %}">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search by title or description">
+        <button type="submit">Search</button>
+        {% if query %}
+            <a href="{% url 'my_materials' %}">Clear</a>
+        {% endif %}
+    </form>
+
     {% if materials %}
         <table border="1" cellpadding="6" cellspacing="0">
             <thead>
@@ -26,6 +34,8 @@
                 {% endfor %}
             </tbody>
         </table>
+    {% elif query %}
+        <p>No materials found for "{{ query }}".</p>
     {% else %}
         <p>You have not created any materials yet.</p>
     {% endif %}

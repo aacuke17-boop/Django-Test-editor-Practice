@@ -29,5 +29,14 @@ def material_detail(request, pk):
 
 @login_required
 def my_materials(request):
-    materials = Questionnaire.objects.filter(creator=request.user).order_by("-creation_time")
-    return render(request, "surveys/my_materials.html", {"materials": materials})
+    query = request.GET.get("q", "").strip()
+    materials = (
+        Questionnaire.objects.filter(creator=request.user)
+        .search(query)
+        .order_by("-creation_time")
+    )
+    return render(
+        request,
+        "surveys/my_materials.html",
+        {"materials": materials, "query": query},
+    )
