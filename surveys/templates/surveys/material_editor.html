@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{% if material %}Edit material{% else %}New material{% endif %} - Questionnaires{% endblock %}
 
@@ -7,7 +8,30 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Save</button>
-        <a href="{% url 'my_materials' %}">Cancel</a>
+
+        {% if not material %}
+            <fieldset>
+                <legend>Questions</legend>
+                <div id="questions-list">
+                    {% for question in questions %}
+                        {% include "surveys/_question_block.html" %}
+                    {% endfor %}
+                </div>
+                <button type="button" id="add-question">Add question</button>
+            </fieldset>
+
+            <template id="question-template">
+                {% include "surveys/_question_block.html" with question=blank_question %}
+            </template>
+        {% endif %}
+
+        <p>
+            <button type="submit">Save</button>
+            <a href="{% url 'my_materials' %}">Cancel</a>
+        </p>
     </form>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'surveys/app.js' %}"></script>
 {% endblock %}

@@ -1,0 +1,13 @@
+<div class="question-block" style="border: 1px solid #999; padding: 8px; margin-bottom: 8px;">
+    <input type="hidden" name="question_index" value="{{ question.index }}">
+    <p><strong>Question <span class="question-number"></span></strong></p>
+    <p>
+        <textarea name="q{{ question.index }}_text" rows="2" cols="60" placeholder="Question text">{{ question.text }}</textarea>
+    </p>
+    <p class="points-field">
+        <label>Points
+            <input type="number" name="q{{ question.index }}_points" value="{{ question.points }}" min="0" step="0.01">
+        </label>
+    </p>
+    <button type="button" class="remove-question">Remove</button>
+</div>

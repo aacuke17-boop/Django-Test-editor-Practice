@@ -1,6 +1,8 @@
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 
+from .editor import blank_question, parse_questions, save_questions
 from .forms import QuestionnaireForm
 from .models import Questionnaire
 
@@ -51,15 +53,26 @@ def my_materials(request):
 def material_create(request):
     if request.method == "POST":
         form = QuestionnaireForm(request.POST)
+        questions = parse_questions(request.POST)
         if form.is_valid():
-            material = form.save(commit=False)
-            material.creator = request.user
-            material.save()
+            with transaction.atomic():
+                material = form.save(commit=False)
+                material.creator = request.user
+                material.save()
+                save_questions(material, questions)
             return redirect("my_materials")
     else:
         form = QuestionnaireForm()
-    return render(request, "surveys/material_editor.html", {"form": form})
-
+        questions = [blank_question(1)]
+    return render(
+        request,
+        "surveys/material_editor.html",
+        {
+            "form": form,
+            "questions": questions,
+            "blank_question": blank_question("__index__"),
+        },
+    )
 
 @login_required
 def material_edit(request, pk):
