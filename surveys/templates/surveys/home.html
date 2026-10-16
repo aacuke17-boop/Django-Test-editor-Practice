@@ -4,5 +4,26 @@
 
 {% block content %}
     <h1>Questionnaires</h1>
-    <p>Surveys and tests will be listed here.</p>
+    {% if materials %}
+        <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Author</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for material in materials %}
+                    <tr>
+                        <td><a href="{% url 'material_detail' material.pk %}">{{ material.title }}</a></td>
+                        <td>{% if material.is_test %}Test{% else %}Survey{% endif %}</td>
+                        <td>{% if material.creator %}{{ material.creator.username }}{% else %}Deleted user{% endif %}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No materials available yet.</p>
+    {% endif %}
 {% endblock %}
