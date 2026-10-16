@@ -33,7 +33,10 @@
                         <td>{% if material.is_test %}Test{% else %}Survey{% endif %}</td>
                         <td>{% if material.restricted_access %}Restricted{% else %}Public{% endif %}</td>
                         <td>{{ material.update_time|date:"Y-m-d H:i" }}</td>
-                        <td><a href="{% url 'material_edit' material.pk %}">Edit</a></td>
+                        <td>
+                            <a href="{% url 'material_edit' material.pk %}">Edit</a>
+                            <a href="{% url 'material_delete' material.pk %}">Delete</a>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

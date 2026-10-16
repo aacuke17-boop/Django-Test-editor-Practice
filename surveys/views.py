@@ -76,3 +76,15 @@ def material_edit(request, pk):
         "surveys/material_editor.html",
         {"form": form, "material": material},
     )
+
+@login_required
+def material_delete(request, pk):
+    material = get_own_material(request, pk)
+    if request.method == "POST":
+        material.delete()
+        return redirect("my_materials")
+    return render(
+        request,
+        "surveys/material_confirm_delete.html",
+        {"material": material, "attempts_count": material.attempts.count()},
+    )
