@@ -1,7 +1,16 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
+
+class QuestionnaireQuerySet(models.QuerySet):
+    def available_to(self, user):
+        public = Q(restricted_access=False)
+        if user is None or not user.is_authenticated:
+            return self.filter(public)
+        granted = Access.objects.filter(user=user).values("form_id")
+        return self.filter(public | Q(creator=user) | Q(pk__in=granted))
 
 class Questionnaire(models.Model):
     form_id = models.AutoField(primary_key=True)
@@ -19,6 +28,8 @@ class Questionnaire(models.Model):
     restricted_access = models.BooleanField(default=False)
     creation_time = models.DateTimeField(auto_now_add=True)
     update_time = models.DateTimeField(auto_now=True)
+
+    objects = QuestionnaireQuerySet.as_manager()
 
     class Meta:
         managed = False
