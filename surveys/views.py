@@ -4,12 +4,18 @@ from .models import Questionnaire
 
 
 def home(request):
+    query = request.GET.get("q", "").strip()
     materials = (
         Questionnaire.objects.available_to(request.user)
+        .search(query)
         .select_related("creator")
         .order_by("-creation_time")
     )
-    return render(request, "surveys/home.html", {"materials": materials})
+    return render(
+        request,
+        "surveys/home.html",
+        {"materials": materials, "query": query},
+    )
 
 
 def material_detail(request, pk):

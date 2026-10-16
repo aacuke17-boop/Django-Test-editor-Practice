@@ -12,6 +12,12 @@ class QuestionnaireQuerySet(models.QuerySet):
         granted = Access.objects.filter(user=user).values("form_id")
         return self.filter(public | Q(creator=user) | Q(pk__in=granted))
 
+    def search(self, query):
+        query = (query or "").strip()
+        if not query:
+            return self
+        return self.filter(Q(title__icontains=query) | Q(description__icontains=query))
+
 class Questionnaire(models.Model):
     form_id = models.AutoField(primary_key=True)
     creator = models.ForeignKey(
