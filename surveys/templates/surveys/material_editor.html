@@ -12,6 +12,15 @@
         {% if not material %}
             <fieldset>
                 <legend>Questions</legend>
+
+                {% if editor_errors %}
+                    <ul style="color: #b00020;">
+                        {% for error in editor_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
                 <div id="questions-list">
                     {% for question in questions %}
                         {% include "surveys/_question_block.html" %}

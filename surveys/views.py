@@ -2,7 +2,13 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .editor import blank_option, blank_question, parse_questions, save_questions
+from .editor import (
+    blank_option,
+    blank_question,
+    parse_questions,
+    save_questions,
+    validate_editor,
+)
 from .forms import QuestionnaireForm
 from .models import Questionnaire
 
@@ -51,10 +57,13 @@ def my_materials(request):
 
 @login_required
 def material_create(request):
+    editor_errors = []
     if request.method == "POST":
         form = QuestionnaireForm(request.POST)
         questions = parse_questions(request.POST)
-        if form.is_valid():
+        form_valid = form.is_valid()
+        editor_errors = validate_editor(questions, form.cleaned_data.get("is_test", False))
+        if form_valid and not editor_errors:
             with transaction.atomic():
                 material = form.save(commit=False)
                 material.creator = request.user
@@ -70,6 +79,7 @@ def material_create(request):
         {
             "form": form,
             "questions": questions,
+            "editor_errors": editor_errors,
             "blank_question": blank_question("__index__"),
             "blank_option": blank_option("__oindex__"),
         },
