@@ -105,3 +105,28 @@ def save_questions(material, questions):
                 is_correct=bool(option["correct"]) and is_test,
                 position=option_position,
             )
+
+def load_questions(material):
+    questions = []
+    for q_index, question in enumerate(material.questions.prefetch_related("options"), start=1):
+        questions.append(
+            {
+                "index": str(q_index),
+                "text": question.question_text,
+                "points": str(question.points),
+                "options": [
+                    {
+                        "index": str(o_index),
+                        "text": option.option_text,
+                        "correct": option.is_correct,
+                    }
+                    for o_index, option in enumerate(question.options.all(), start=1)
+                ],
+            }
+        )
+    return questions
+
+
+def replace_questions(material, questions):
+    material.questions.all().delete()
+    save_questions(material, questions)

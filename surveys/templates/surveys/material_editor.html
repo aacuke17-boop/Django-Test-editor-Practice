@@ -9,34 +9,32 @@
         {% csrf_token %}
         {{ form.as_p }}
 
-        {% if not material %}
-            <fieldset>
-                <legend>Questions</legend>
+        <fieldset>
+            <legend>Questions</legend>
 
-                {% if editor_errors %}
-                    <ul style="color: #b00020;">
-                        {% for error in editor_errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-
-                <div id="questions-list">
-                    {% for question in questions %}
-                        {% include "surveys/_question_block.html" %}
+            {% if editor_errors %}
+                <ul style="color: #b00020; max-height: 4.5em; overflow-y: auto;">
+                    {% for error in editor_errors %}
+                        <li>{{ error }}</li>
                     {% endfor %}
-                </div>
-                <button type="button" id="add-question">Add question</button>
-            </fieldset>
+                </ul>
+            {% endif %}
 
-            <template id="question-template">
-                {% include "surveys/_question_block.html" with question=blank_question %}
-            </template>
+            <div id="questions-list">
+                {% for question in questions %}
+                    {% include "surveys/_question_block.html" %}
+                {% endfor %}
+            </div>
+            <button type="button" id="add-question">Add question</button>
+        </fieldset>
 
-            <template id="option-template">
-                {% include "surveys/_option_block.html" with qindex="__qindex__" option=blank_option %}
-            </template>
-        {% endif %}
+        <template id="question-template">
+            {% include "surveys/_question_block.html" with question=blank_question %}
+        </template>
+
+        <template id="option-template">
+            {% include "surveys/_option_block.html" with qindex="__qindex__" option=blank_option %}
+        </template>
 
         <p>
             <button type="submit">Save</button>

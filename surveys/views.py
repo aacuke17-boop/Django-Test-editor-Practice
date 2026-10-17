@@ -5,7 +5,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .editor import (
     blank_option,
     blank_question,
+    load_questions,
     parse_questions,
+    replace_questions,
     save_questions,
     validate_editor,
 )
@@ -88,17 +90,31 @@ def material_create(request):
 @login_required
 def material_edit(request, pk):
     material = get_own_material(request, pk)
+    editor_errors = []
     if request.method == "POST":
         form = QuestionnaireForm(request.POST, instance=material)
-        if form.is_valid():
-            form.save()
+        questions = parse_questions(request.POST)
+        form_valid = form.is_valid()
+        editor_errors = validate_editor(questions, form.cleaned_data.get("is_test", False))
+        if form_valid and not editor_errors:
+            with transaction.atomic():
+                form.save()
+                replace_questions(material, questions)
             return redirect("my_materials")
     else:
         form = QuestionnaireForm(instance=material)
+        questions = load_questions(material) or [blank_question(1)]
     return render(
         request,
         "surveys/material_editor.html",
-        {"form": form, "material": material},
+        {
+            "form": form,
+            "material": material,
+            "questions": questions,
+            "editor_errors": editor_errors,
+            "blank_question": blank_question("__index__"),
+            "blank_option": blank_option("__oindex__"),
+        },
     )
 
 @login_required
