@@ -128,3 +128,13 @@ def material_delete(request, pk):
         "surveys/material_confirm_delete.html",
         {"material": material, "attempts_count": material.attempts.count()},
     )
+
+@login_required
+def material_access(request, pk):
+    material = get_own_material(request, pk)
+    entries = material.access_entries.select_related("user").order_by("user__email")
+    return render(
+        request,
+        "surveys/material_access.html",
+        {"material": material, "entries": entries},
+    )

@@ -39,6 +39,9 @@
         <p>
             <button type="submit">Save</button>
             <a href="{% url 'my_materials' %}">Cancel</a>
+            {% if material %}
+                <a href="{% url 'material_access' material.pk %}">Manage access</a>
+            {% endif %}
         </p>
     </form>
 {% endblock %}

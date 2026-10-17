@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Access - {{ material.title }} - Questionnaires{% endblock %}
+
+{% block content %}
+    <h1>Access: {{ material.title }}</h1>
+
+    {% if not material.restricted_access %}
+        <p>This material is public, so everyone can open it. Granted access matters only for materials with restricted access.</p>
+    {% endif %}
+
+    <h2>Users with access</h2>
+    {% if entries %}
+        <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Username</th>
+                    <th>Granted</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                    <tr>
+                        <td>{{ entry.user.email }}</td>
+                        <td>{{ entry.user.username }}</td>
+                        <td>{{ entry.granted_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No users have been granted access yet.</p>
+    {% endif %}
+
+    <p>
+        <a href="{% url 'material_edit' material.pk %}">Back to editor</a>
+        <a href="{% url 'my_materials' %}">My materials</a>
+    </p>
+{% endblock %}
