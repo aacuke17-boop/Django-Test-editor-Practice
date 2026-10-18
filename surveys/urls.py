@@ -9,5 +9,10 @@ urlpatterns = [
     path("materials/<int:pk>/edit/", views.material_edit, name="material_edit"),
     path("materials/<int:pk>/delete/", views.material_delete, name="material_delete"),
     path("materials/<int:pk>/access/", views.material_access, name="material_access"),
+    path(
+        "materials/<int:pk>/access/<int:user_id>/revoke/",
+        views.material_access_revoke,
+        name="material_access_revoke",
+    ),
     path("my-materials/", views.my_materials, name="my_materials"),
 ]

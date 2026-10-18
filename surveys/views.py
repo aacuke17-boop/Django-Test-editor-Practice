@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .editor import (
     blank_option,
@@ -147,3 +148,16 @@ def material_access(request, pk):
         "surveys/material_access.html",
         {"material": material, "entries": entries, "form": form},
     )
+
+@login_required
+@require_POST
+def material_access_revoke(request, pk, user_id):
+    material = get_own_material(request, pk)
+    entry = material.access_entries.select_related("user").filter(user_id=user_id).first()
+    if entry is None:
+        messages.error(request, "This user does not have access.")
+    else:
+        email = entry.user.email
+        material.access_entries.filter(user_id=user_id).delete()
+        messages.success(request, f"Access revoked from {email}.")
+    return redirect("material_access", pk=material.pk)
