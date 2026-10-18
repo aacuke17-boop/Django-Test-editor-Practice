@@ -9,6 +9,13 @@
         <p>This material is public, so everyone can open it. Granted access matters only for materials with restricted access.</p>
     {% endif %}
 
+    <h2>Grant access</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Grant access</button>
+    </form>
+
     <h2>Users with access</h2>
     {% if entries %}
         <table border="1" cellpadding="6" cellspacing="0">

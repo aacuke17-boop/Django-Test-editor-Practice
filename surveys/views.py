@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
@@ -11,8 +12,8 @@ from .editor import (
     save_questions,
     validate_editor,
 )
-from .forms import QuestionnaireForm
-from .models import Questionnaire
+from .forms import GrantAccessForm, QuestionnaireForm
+from .models import Access, Questionnaire
 
 
 def get_own_material(request, pk):
@@ -132,9 +133,17 @@ def material_delete(request, pk):
 @login_required
 def material_access(request, pk):
     material = get_own_material(request, pk)
+    if request.method == "POST":
+        form = GrantAccessForm(material, request.POST)
+        if form.is_valid():
+            Access.objects.create(form=material, user=form.user)
+            messages.success(request, f"Access granted to {form.user.email}.")
+            return redirect("material_access", pk=material.pk)
+    else:
+        form = GrantAccessForm(material)
     entries = material.access_entries.select_related("user").order_by("user__email")
     return render(
         request,
         "surveys/material_access.html",
-        {"material": material, "entries": entries},
+        {"material": material, "entries": entries, "form": form},
     )
