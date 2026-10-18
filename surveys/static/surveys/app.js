@@ -75,9 +75,29 @@
         applyTestMode();
     }
 
+    function initAttemptForm() {
+        var form = document.getElementById("attempt-form");
+        var button = document.getElementById("submit-attempt");
+
+        form.addEventListener("submit", function () {
+            button.disabled = true;
+            button.textContent = "Submitting...";
+        });
+
+        window.addEventListener("pageshow", function (event) {
+            if (event.persisted) {
+                button.disabled = false;
+                button.textContent = "Submit";
+            }
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         if (document.getElementById("questions-list")) {
             initEditor();
+        }
+        if (document.getElementById("attempt-form")) {
+            initAttemptForm();
         }
     });
 })();

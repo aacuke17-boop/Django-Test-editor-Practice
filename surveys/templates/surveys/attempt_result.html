@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Result - {{ material.title }} - Questionnaires{% endblock %}
+
+{% block content %}
+    <h1>{{ material.title }}</h1>
+
+    {% if material.is_test %}
+        <p class="attempt-score">Your score: <strong>{{ attempt.score }}</strong> out of {{ max_score }} ({{ percent|floatformat:0 }}%)</p>
+    {% else %}
+        <p class="attempt-saved">Thank you! Your answers have been saved.</p>
+    {% endif %}
+
+    <p><a href="{% url 'home' %}">Back to all materials</a></p>
+{% endblock %}

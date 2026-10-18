@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .editor import (
@@ -14,11 +15,20 @@ from .editor import (
     validate_editor,
 )
 from .forms import GrantAccessForm, QuestionnaireForm
-from .models import Access, Questionnaire
+from .models import Access, Attempt, Questionnaire, UserAnswer
+from .scoring import calculate_attempt_score, calculate_max_score
 
 
 def get_own_material(request, pk):
     return get_object_or_404(Questionnaire, pk=pk, creator=request.user)
+
+
+def get_own_attempt(request, attempt_id):
+    return get_object_or_404(
+        Attempt.objects.select_related("form"),
+        pk=attempt_id,
+        user=request.user,
+    )
 
 
 def home(request):
@@ -41,7 +51,11 @@ def material_detail(request, pk):
         Questionnaire.objects.available_to(request.user).select_related("creator"),
         pk=pk,
     )
-    return render(request, "surveys/material_detail.html", {"material": material})
+    return render(
+        request,
+        "surveys/material_detail.html",
+        {"material": material, "has_questions": material.questions.exists()},
+    )
 
 
 @login_required
@@ -89,6 +103,7 @@ def material_create(request):
         },
     )
 
+
 @login_required
 def material_edit(request, pk):
     material = get_own_material(request, pk)
@@ -119,6 +134,7 @@ def material_edit(request, pk):
         },
     )
 
+
 @login_required
 def material_delete(request, pk):
     material = get_own_material(request, pk)
@@ -130,6 +146,7 @@ def material_delete(request, pk):
         "surveys/material_confirm_delete.html",
         {"material": material, "attempts_count": material.attempts.count()},
     )
+
 
 @login_required
 def material_access(request, pk):
@@ -149,6 +166,7 @@ def material_access(request, pk):
         {"material": material, "entries": entries, "form": form},
     )
 
+
 @login_required
 @require_POST
 def material_access_revoke(request, pk, user_id):
@@ -161,3 +179,67 @@ def material_access_revoke(request, pk, user_id):
         material.access_entries.filter(user_id=user_id).delete()
         messages.success(request, f"Access revoked from {email}.")
     return redirect("material_access", pk=material.pk)
+
+@login_required
+@require_POST
+def attempt_start(request, pk):
+    material = get_object_or_404(Questionnaire.objects.available_to(request.user), pk=pk)
+    if not material.questions.exists():
+        messages.error(request, "This material has no questions yet.")
+        return redirect("material_detail", pk=material.pk)
+    attempt = Attempt.objects.create(form=material, user=request.user)
+    return redirect("attempt_take", attempt_id=attempt.pk)
+
+
+@login_required
+def attempt_take(request, attempt_id):
+    attempt = get_own_attempt(request, attempt_id)
+    if attempt.status == Attempt.STATUS_COMPLETED:
+        return redirect("attempt_result", attempt_id=attempt.pk)
+    material = attempt.form
+    questions = list(material.questions.prefetch_related("options"))
+
+    if request.method == "POST":
+        answers = []
+        for question in questions:
+            options = list(question.options.all())
+            allowed = {option.pk for option in options}
+            chosen = {
+                int(value)
+                for value in request.POST.getlist(f"question_{question.pk}")
+                if value.isascii() and value.isdigit()
+            } & allowed
+            for option in options:
+                if option.pk in chosen:
+                    answers.append(UserAnswer(attempt=attempt, question=question, option=option))
+
+        with transaction.atomic():
+            locked = Attempt.objects.select_for_update().get(pk=attempt.pk)
+            if locked.status == Attempt.STATUS_COMPLETED:
+                return redirect("attempt_result", attempt_id=locked.pk)
+            UserAnswer.objects.bulk_create(answers)
+            locked.completed_at = timezone.now()
+            locked.status = Attempt.STATUS_COMPLETED
+            locked.score = calculate_attempt_score(locked)
+            locked.save(update_fields=["completed_at", "status", "score"])
+        return redirect("attempt_result", attempt_id=attempt.pk)
+
+    return render(
+        request,
+        "surveys/attempt_take.html",
+        {"attempt": attempt, "material": material, "questions": questions},
+    )
+
+
+@login_required
+def attempt_result(request, attempt_id):
+    attempt = get_own_attempt(request, attempt_id)
+    if attempt.status != Attempt.STATUS_COMPLETED:
+        return redirect("attempt_take", attempt_id=attempt.pk)
+    material = attempt.form
+    context = {"attempt": attempt, "material": material}
+    if material.is_test:
+        max_score = calculate_max_score(material)
+        context["max_score"] = max_score
+        context["percent"] = (attempt.score / max_score * 100) if max_score else 0
+    return render(request, "surveys/attempt_result.html", context)

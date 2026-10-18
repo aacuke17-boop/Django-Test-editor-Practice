@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ material.title }} - Questionnaires{% endblock %}
+
+{% block content %}
+    <h1>{{ material.title }}</h1>
+    {% if material.description %}
+        <div class="material-description">{{ material.description|linebreaks }}</div>
+    {% endif %}
+
+    <form method="post" id="attempt-form">
+        {% csrf_token %}
+        {% for question in questions %}
+            <fieldset class="attempt-question">
+                <legend>{{ forloop.counter }}. {{ question.question_text|linebreaksbr }}</legend>
+                {% for option in question.options.all %}
+                    <div class="attempt-option">
+                        <label>
+                            <input type="checkbox" name="question_{{ question.pk }}" value="{{ option.pk }}">
+                            {{ option.option_text }}
+                        </label>
+                    </div>
+                {% endfor %}
+            </fieldset>
+        {% endfor %}
+        <p>
+            <button type="submit" id="submit-attempt">Submit</button>
+        </p>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'surveys/app.js' %}"></script>
+{% endblock %}
