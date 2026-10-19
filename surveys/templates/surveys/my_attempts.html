@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}My attempts - Questionnaires{% endblock %}
+
+{% block content %}
+    <h1>My attempts</h1>
+
+    {% if rows %}
+        <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th>Type</th>
+                    <th>Started</th>
+                    <th>Completed</th>
+                    <th>Duration</th>
+                    <th>Result</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td><a href="{% url 'material_detail' row.attempt.form.pk %}">{{ row.attempt.form.title }}</a></td>
+                        <td>{% if row.attempt.form.is_test %}Test{% else %}Survey{% endif %}</td>
+                        <td>{{ row.attempt.started_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ row.attempt.completed_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ row.duration }}</td>
+                        <td>
+                            {% if row.attempt.form.is_test %}
+                                {{ row.attempt.score }} / {{ row.max_score }}
+                            {% else %}
+                                Completed
+                            {% endif %}
+                        </td>
+                        <td><a href="{% url 'attempt_result' row.attempt.pk %}">View</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have not completed any attempts yet.</p>
+    {% endif %}
+{% endblock %}

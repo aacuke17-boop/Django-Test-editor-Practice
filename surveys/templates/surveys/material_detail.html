@@ -15,17 +15,13 @@
         <p>No description.</p>
     {% endif %}
 
-        {% if user.is_authenticated %}
-        {% if has_questions %}
-            <form method="post" action="{% url 'attempt_start' material.pk %}">
-                {% csrf_token %}
-                <button type="submit">Start</button>
-            </form>
-        {% else %}
-            <p>This material has no questions yet.</p>
-        {% endif %}
+    {% if has_questions %}
+        <form method="post" action="{% url 'attempt_start' material.pk %}">
+            {% csrf_token %}
+            <button type="submit">Start</button>
+        </form>
     {% else %}
-        <p><a href="{% url 'login' %}?next={{ request.path }}">Log in</a> to take this {% if material.is_test %}test{% else %}survey{% endif %}.</p>
+        <p>This material has no questions yet.</p>
     {% endif %}
 
     <p><a href="{% url 'home' %}">Back to all materials</a></p>

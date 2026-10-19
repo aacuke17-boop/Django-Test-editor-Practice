@@ -7,6 +7,7 @@
 
     {% if material.is_test %}
         <p class="attempt-score">Your score: <strong>{{ attempt.score }}</strong> out of {{ max_score }} ({{ percent|floatformat:0 }}%)</p>
+        {% include "surveys/_attempt_review.html" %}
     {% else %}
         <p class="attempt-saved">Thank you! Your answers have been saved.</p>
     {% endif %}

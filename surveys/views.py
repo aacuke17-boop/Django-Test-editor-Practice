@@ -4,6 +4,9 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.http import Http404
+
+from accounts.models import ANONYMOUS_EMAIL, User
 
 from .editor import (
     blank_option,
@@ -17,6 +20,8 @@ from .editor import (
 from .forms import GrantAccessForm, QuestionnaireForm
 from .models import Access, Attempt, Questionnaire, UserAnswer
 from .scoring import calculate_attempt_score, calculate_max_score
+from .review import build_review
+from .formatting import format_duration
 
 
 def get_own_material(request, pk):
@@ -24,11 +29,12 @@ def get_own_material(request, pk):
 
 
 def get_own_attempt(request, attempt_id):
-    return get_object_or_404(
-        Attempt.objects.select_related("form"),
-        pk=attempt_id,
-        user=request.user,
-    )
+    queryset = Attempt.objects.select_related("form")
+    if request.user.is_authenticated:
+        return get_object_or_404(queryset, pk=attempt_id, user=request.user)
+    if attempt_id not in request.session.get("anonymous_attempts", []):
+        raise Http404
+    return get_object_or_404(queryset, pk=attempt_id, user__email=ANONYMOUS_EMAIL)
 
 
 def home(request):
@@ -180,18 +186,23 @@ def material_access_revoke(request, pk, user_id):
         messages.success(request, f"Access revoked from {email}.")
     return redirect("material_access", pk=material.pk)
 
-@login_required
 @require_POST
 def attempt_start(request, pk):
     material = get_object_or_404(Questionnaire.objects.available_to(request.user), pk=pk)
     if not material.questions.exists():
         messages.error(request, "This material has no questions yet.")
         return redirect("material_detail", pk=material.pk)
-    attempt = Attempt.objects.create(form=material, user=request.user)
+    if request.user.is_authenticated:
+        attempt = Attempt.objects.create(form=material, user=request.user)
+    else:
+        anonymous = User.objects.get(email=ANONYMOUS_EMAIL)
+        attempt = Attempt.objects.create(form=material, user=anonymous)
+        attempt_ids = request.session.get("anonymous_attempts", [])
+        attempt_ids.append(attempt.pk)
+        request.session["anonymous_attempts"] = attempt_ids[-50:]
     return redirect("attempt_take", attempt_id=attempt.pk)
 
 
-@login_required
 def attempt_take(request, attempt_id):
     attempt = get_own_attempt(request, attempt_id)
     if attempt.status == Attempt.STATUS_COMPLETED:
@@ -231,7 +242,6 @@ def attempt_take(request, attempt_id):
     )
 
 
-@login_required
 def attempt_result(request, attempt_id):
     attempt = get_own_attempt(request, attempt_id)
     if attempt.status != Attempt.STATUS_COMPLETED:
@@ -242,4 +252,30 @@ def attempt_result(request, attempt_id):
         max_score = calculate_max_score(material)
         context["max_score"] = max_score
         context["percent"] = (attempt.score / max_score * 100) if max_score else 0
+        context["review"] = build_review(attempt)
     return render(request, "surveys/attempt_result.html", context)
+
+@login_required
+def my_attempts(request):
+    attempts = (
+        Attempt.objects.filter(user=request.user, status=Attempt.STATUS_COMPLETED)
+        .select_related("form")
+        .order_by("-completed_at")
+    )
+    max_scores = {}
+    rows = []
+    for attempt in attempts:
+        material = attempt.form
+        max_score = None
+        if material.is_test:
+            if material.pk not in max_scores:
+                max_scores[material.pk] = calculate_max_score(material)
+            max_score = max_scores[material.pk]
+        rows.append(
+            {
+                "attempt": attempt,
+                "duration": format_duration(attempt.completed_at - attempt.started_at),
+                "max_score": max_score,
+            }
+        )
+    return render(request, "surveys/my_attempts.html", {"rows": rows})
