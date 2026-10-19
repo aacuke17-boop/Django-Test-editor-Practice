@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Results - {{ material.title }} - Questionnaires{% endblock %}
+
+{% block content %}
+    <h1>Results: {{ material.title }}</h1>
+
+    <p>
+        <a href="{% url 'material_export_csv' material.pk %}">Export CSV</a>
+    </p>
+
+    {% if stats.total %}
+        <h2>Summary</h2>
+        <table border="1" cellpadding="6" cellspacing="0">
+            <tr>
+                <th>Participants (completed attempts)</th>
+                <td>{{ stats.total }}</td>
+            </tr>
+            {% if material.is_test %}
+                <tr>
+                    <th>Average score</th>
+                    <td>{{ stats.average_score }} / {{ stats.max_score }}</td>
+                </tr>
+            {% endif %}
+            <tr>
+                <th>Average duration</th>
+                <td>{{ stats.average_duration }}</td>
+            </tr>
+        </table>
+
+        <h2>Questions</h2>
+        <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Question</th>
+                    {% if material.is_test %}
+                        <th>Answered correctly</th>
+                        <th>Answered incorrectly</th>
+                        <th>% correct</th>
+                    {% else %}
+                        <th>Answered</th>
+                        <th>Skipped</th>
+                        <th>% answered</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in stats.questions %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.question.question_text|truncatechars:120 }}</td>
+                        <td>{{ item.positive }}</td>
+                        <td>{{ item.negative }}</td>
+                        <td>{{ item.percent|floatformat:0 }}%</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Option popularity</h2>
+        {% for item in stats.questions %}
+            <h3>{{ forloop.counter }}. {{ item.question.question_text|truncatechars:120 }}</h3>
+            <table border="1" cellpadding="6" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        {% if material.is_test %}<th>Correct option</th>{% endif %}
+                        <th>Selected</th>
+                        <th>% of attempts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in item.options %}
+                        <tr>
+                            <td>{{ entry.option.option_text }}</td>
+                            {% if material.is_test %}
+                                <td>{% if entry.option.is_correct %}yes{% endif %}</td>
+                            {% endif %}
+                            <td>{{ entry.count }}</td>
+                            <td>{{ entry.percent|floatformat:0 }}%</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+
+        <h2>Attempts</h2>
+        <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Participant</th>
+                    <th>Started</th>
+                    <th>Completed</th>
+                    <th>Duration</th>
+                    {% if material.is_test %}<th>Score</th>{% endif %}
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td>{{ row.participant }}</td>
+                        <td>{{ row.attempt.started_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ row.attempt.completed_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ row.duration }}</td>
+                        {% if material.is_test %}<td>{{ row.attempt.score }} / {{ stats.max_score }}</td>{% endif %}
+                        <td><a href="{% url 'material_attempt_detail' material.pk row.attempt.pk %}">Details</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No completed attempts yet.</p>
+    {% endif %}
+
+    <p><a href="{% url 'my_materials' %}">My materials</a></p>
+{% endblock %}

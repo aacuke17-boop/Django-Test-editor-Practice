@@ -24,6 +24,8 @@ from .models import Access, Attempt, Questionnaire, UserAnswer
 from .scoring import calculate_attempt_score, calculate_max_score
 from .review import build_review
 from .formatting import format_duration, participant_label
+from .stats import compute_statistics
+from .exports import build_csv_response
 
 
 def get_own_material(request, pk):
@@ -335,28 +337,6 @@ def my_attempts(request):
         )
     return render(request, "surveys/my_attempts.html", {"rows": rows})
 
-@login_required
-def material_attempts(request, pk):
-    material = get_own_material(request, pk)
-    attempts = (
-        material.attempts.filter(status=Attempt.STATUS_COMPLETED)
-        .select_related("user")
-        .order_by("-completed_at")
-    )
-    rows = [
-        {
-            "attempt": attempt,
-            "participant": participant_label(attempt.user),
-            "duration": format_duration(attempt.completed_at - attempt.started_at),
-        }
-        for attempt in attempts
-    ]
-    max_score = calculate_max_score(material) if material.is_test else None
-    return render(
-        request,
-        "surveys/material_attempts.html",
-        {"material": material, "rows": rows, "max_score": max_score},
-    )
 
 @login_required
 def material_attempt_detail(request, pk, attempt_id):
@@ -376,3 +356,30 @@ def material_attempt_detail(request, pk, attempt_id):
     if material.is_test:
         context["max_score"] = calculate_max_score(material)
     return render(request, "surveys/material_attempt_detail.html", context)
+
+@login_required
+def material_results(request, pk):
+    material = get_own_material(request, pk)
+    attempts = (
+        material.attempts.filter(status=Attempt.STATUS_COMPLETED)
+        .select_related("user")
+        .order_by("-completed_at")
+    )
+    rows = [
+        {
+            "attempt": attempt,
+            "participant": participant_label(attempt.user),
+            "duration": format_duration(attempt.completed_at - attempt.started_at),
+        }
+        for attempt in attempts
+    ]
+    return render(
+        request,
+        "surveys/material_results.html",
+        {"material": material, "stats": compute_statistics(material), "rows": rows},
+    )
+
+@login_required
+def material_export_csv(request, pk):
+    material = get_own_material(request, pk)
+    return build_csv_response(material)
