@@ -43,6 +43,18 @@
                 <a href="{% url 'material_access' material.pk %}">Manage access</a>
             {% endif %}
         </p>
+
+        {% if confirm_count %}
+            <dialog id="confirm-dialog" class="confirm-dialog">
+                <h2>Confirm changes</h2>
+                <p>You changed the structure of this material (questions, options, correct answers, points or the test/survey type).</p>
+                <p class="confirm-warning"><strong>All previous attempts ({{ confirm_count }}) will be deleted.</strong> This cannot be undone.</p>
+                <p>
+                    <button type="submit" name="confirm_delete" value="1">Save and delete attempts</button>
+                    <button type="button" id="confirm-cancel">Cancel</button>
+                </p>
+            </dialog>
+        {% endif %}
     </form>
 {% endblock %}
 

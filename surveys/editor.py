@@ -130,3 +130,36 @@ def load_questions(material):
 def replace_questions(material, questions):
     material.questions.all().delete()
     save_questions(material, questions)
+
+def posted_signature(questions, is_test):
+    return (
+        is_test,
+        tuple(
+            (
+                item["text"],
+                parse_points(item["points"]) if is_test else Decimal("0.00"),
+                tuple(
+                    (option["text"], bool(option["correct"]) and is_test)
+                    for option in item["options"]
+                ),
+            )
+            for item in questions
+        ),
+    )
+
+
+def stored_signature(material, is_test):
+    return (
+        is_test,
+        tuple(
+            (
+                question.question_text,
+                question.points.quantize(Decimal("0.01")),
+                tuple(
+                    (option.option_text, option.is_correct)
+                    for option in question.options.all()
+                ),
+            )
+            for question in material.questions.prefetch_related("options")
+        ),
+    )

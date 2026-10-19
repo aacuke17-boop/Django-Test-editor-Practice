@@ -13,8 +13,10 @@ from .editor import (
     blank_question,
     load_questions,
     parse_questions,
+    posted_signature,
     replace_questions,
     save_questions,
+    stored_signature,
     validate_editor,
 )
 from .forms import GrantAccessForm, QuestionnaireForm
@@ -28,13 +30,45 @@ def get_own_material(request, pk):
     return get_object_or_404(Questionnaire, pk=pk, creator=request.user)
 
 
+class AttemptRemoved(Exception):
+    def __init__(self, material_id):
+        super().__init__(material_id)
+        self.material_id = material_id
+
+
+def remember_attempt(request, attempt):
+    remembered = request.session.get("attempts", {})
+    remembered[str(attempt.pk)] = attempt.form_id
+    if len(remembered) > 50:
+        remembered = dict(list(remembered.items())[-50:])
+    request.session["attempts"] = remembered
+
+
 def get_own_attempt(request, attempt_id):
     queryset = Attempt.objects.select_related("form")
+    remembered = request.session.get("attempts", {})
     if request.user.is_authenticated:
-        return get_object_or_404(queryset, pk=attempt_id, user=request.user)
-    if attempt_id not in request.session.get("anonymous_attempts", []):
+        attempt = queryset.filter(pk=attempt_id, user=request.user).first()
+    elif str(attempt_id) in remembered:
+        attempt = queryset.filter(pk=attempt_id, user__email=ANONYMOUS_EMAIL).first()
+    else:
         raise Http404
-    return get_object_or_404(queryset, pk=attempt_id, user__email=ANONYMOUS_EMAIL)
+    if attempt is None:
+        material_id = remembered.get(str(attempt_id))
+        if material_id is None:
+            raise Http404
+        raise AttemptRemoved(material_id)
+    return attempt
+
+
+def attempt_removed_response(request, material_id):
+    material = Questionnaire.objects.available_to(request.user).filter(pk=material_id).first()
+    return render(
+        request,
+        "surveys/attempt_removed.html",
+        {"material": material},
+        status=410,
+    )
 
 
 def home(request):
@@ -113,17 +147,31 @@ def material_create(request):
 @login_required
 def material_edit(request, pk):
     material = get_own_material(request, pk)
+    original_is_test = material.is_test
     editor_errors = []
+    confirm_count = 0
     if request.method == "POST":
         form = QuestionnaireForm(request.POST, instance=material)
         questions = parse_questions(request.POST)
         form_valid = form.is_valid()
-        editor_errors = validate_editor(questions, form.cleaned_data.get("is_test", False))
+        is_test = form.cleaned_data.get("is_test", False)
+        editor_errors = validate_editor(questions, is_test)
         if form_valid and not editor_errors:
-            with transaction.atomic():
-                form.save()
-                replace_questions(material, questions)
-            return redirect("my_materials")
+            changed = posted_signature(questions, is_test) != stored_signature(
+                material, original_is_test
+            )
+            completed_count = material.attempts.filter(
+                status=Attempt.STATUS_COMPLETED
+            ).count()
+            if changed and completed_count and request.POST.get("confirm_delete") != "1":
+                confirm_count = completed_count
+            else:
+                with transaction.atomic():
+                    form.save()
+                    if changed:
+                        material.attempts.all().delete()
+                        replace_questions(material, questions)
+                return redirect("my_materials")
     else:
         form = QuestionnaireForm(instance=material)
         questions = load_questions(material) or [blank_question(1)]
@@ -135,6 +183,7 @@ def material_edit(request, pk):
             "material": material,
             "questions": questions,
             "editor_errors": editor_errors,
+            "confirm_count": confirm_count,
             "blank_question": blank_question("__index__"),
             "blank_option": blank_option("__oindex__"),
         },
@@ -197,14 +246,15 @@ def attempt_start(request, pk):
     else:
         anonymous = User.objects.get(email=ANONYMOUS_EMAIL)
         attempt = Attempt.objects.create(form=material, user=anonymous)
-        attempt_ids = request.session.get("anonymous_attempts", [])
-        attempt_ids.append(attempt.pk)
-        request.session["anonymous_attempts"] = attempt_ids[-50:]
+    remember_attempt(request, attempt)
     return redirect("attempt_take", attempt_id=attempt.pk)
 
 
 def attempt_take(request, attempt_id):
-    attempt = get_own_attempt(request, attempt_id)
+    try:
+        attempt = get_own_attempt(request, attempt_id)
+    except AttemptRemoved as removed:
+        return attempt_removed_response(request, removed.material_id)
     if attempt.status == Attempt.STATUS_COMPLETED:
         return redirect("attempt_result", attempt_id=attempt.pk)
     material = attempt.form
@@ -225,7 +275,9 @@ def attempt_take(request, attempt_id):
                     answers.append(UserAnswer(attempt=attempt, question=question, option=option))
 
         with transaction.atomic():
-            locked = Attempt.objects.select_for_update().get(pk=attempt.pk)
+            locked = Attempt.objects.select_for_update().filter(pk=attempt.pk).first()
+            if locked is None:
+                return redirect("attempt_take", attempt_id=attempt_id)
             if locked.status == Attempt.STATUS_COMPLETED:
                 return redirect("attempt_result", attempt_id=locked.pk)
             UserAnswer.objects.bulk_create(answers)
@@ -243,7 +295,10 @@ def attempt_take(request, attempt_id):
 
 
 def attempt_result(request, attempt_id):
-    attempt = get_own_attempt(request, attempt_id)
+    try:
+        attempt = get_own_attempt(request, attempt_id)
+    except AttemptRemoved as removed:
+        return attempt_removed_response(request, removed.material_id)
     if attempt.status != Attempt.STATUS_COMPLETED:
         return redirect("attempt_take", attempt_id=attempt.pk)
     material = attempt.form

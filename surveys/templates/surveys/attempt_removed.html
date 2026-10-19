@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Attempt unavailable - Questionnaires{% endblock %}
+
+{% block content %}
+    <h1>Attempt unavailable</h1>
+    <p>This attempt no longer exists: the author changed the material, so its previous attempts were deleted.</p>
+    {% if material %}
+        <p><a href="{% url 'material_detail' material.pk %}">Start "{{ material.title }}" again</a></p>
+    {% else %}
+        <p><a href="{% url 'home' %}">Back to all materials</a></p>
+    {% endif %}
+{% endblock %}

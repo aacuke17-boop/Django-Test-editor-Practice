@@ -75,6 +75,21 @@
         applyTestMode();
     }
 
+    function initConfirmDialog() {
+        var dialog = document.getElementById("confirm-dialog");
+        var cancelButton = document.getElementById("confirm-cancel");
+
+        if (typeof dialog.showModal === "function") {
+            dialog.showModal();
+        } else {
+            dialog.setAttribute("open", "");
+        }
+
+        cancelButton.addEventListener("click", function () {
+            dialog.close();
+        });
+    }
+
     function initAttemptForm() {
         var form = document.getElementById("attempt-form");
         var button = document.getElementById("submit-attempt");
@@ -95,6 +110,9 @@
     document.addEventListener("DOMContentLoaded", function () {
         if (document.getElementById("questions-list")) {
             initEditor();
+        }
+        if (document.getElementById("confirm-dialog")) {
+            initConfirmDialog();
         }
         if (document.getElementById("attempt-form")) {
             initAttemptForm();
