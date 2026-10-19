@@ -23,7 +23,7 @@ from .forms import GrantAccessForm, QuestionnaireForm
 from .models import Access, Attempt, Questionnaire, UserAnswer
 from .scoring import calculate_attempt_score, calculate_max_score
 from .review import build_review
-from .formatting import format_duration
+from .formatting import format_duration, participant_label
 
 
 def get_own_material(request, pk):
@@ -334,3 +334,45 @@ def my_attempts(request):
             }
         )
     return render(request, "surveys/my_attempts.html", {"rows": rows})
+
+@login_required
+def material_attempts(request, pk):
+    material = get_own_material(request, pk)
+    attempts = (
+        material.attempts.filter(status=Attempt.STATUS_COMPLETED)
+        .select_related("user")
+        .order_by("-completed_at")
+    )
+    rows = [
+        {
+            "attempt": attempt,
+            "participant": participant_label(attempt.user),
+            "duration": format_duration(attempt.completed_at - attempt.started_at),
+        }
+        for attempt in attempts
+    ]
+    max_score = calculate_max_score(material) if material.is_test else None
+    return render(
+        request,
+        "surveys/material_attempts.html",
+        {"material": material, "rows": rows, "max_score": max_score},
+    )
+
+@login_required
+def material_attempt_detail(request, pk, attempt_id):
+    material = get_own_material(request, pk)
+    attempt = get_object_or_404(
+        material.attempts.select_related("user", "form"),
+        pk=attempt_id,
+        status=Attempt.STATUS_COMPLETED,
+    )
+    context = {
+        "material": material,
+        "attempt": attempt,
+        "participant": participant_label(attempt.user),
+        "duration": format_duration(attempt.completed_at - attempt.started_at),
+        "review": build_review(attempt),
+    }
+    if material.is_test:
+        context["max_score"] = calculate_max_score(material)
+    return render(request, "surveys/material_attempt_detail.html", context)

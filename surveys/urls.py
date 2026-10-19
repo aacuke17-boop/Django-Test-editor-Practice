@@ -14,6 +14,12 @@ urlpatterns = [
         views.material_access_revoke,
         name="material_access_revoke",
     ),
+    path("materials/<int:pk>/attempts/", views.material_attempts, name="material_attempts"),
+    path(
+        "materials/<int:pk>/attempts/<int:attempt_id>/",
+        views.material_attempt_detail,
+        name="material_attempt_detail",
+    ),
     path("materials/<int:pk>/start/", views.attempt_start, name="attempt_start"),
     path("attempts/<int:attempt_id>/", views.attempt_take, name="attempt_take"),
     path("attempts/<int:attempt_id>/result/", views.attempt_result, name="attempt_result"),

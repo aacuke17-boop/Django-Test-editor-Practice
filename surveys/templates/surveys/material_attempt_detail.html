@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Attempt details - {{ material.title }} - Questionnaires{% endblock %}
+
+{% block content %}
+    <h1>Attempt: {{ material.title }}</h1>
+
+    <p>
+        <strong>Participant:</strong> {{ participant }}<br>
+        <strong>Started:</strong> {{ attempt.started_at|date:"Y-m-d H:i:s" }}<br>
+        <strong>Completed:</strong> {{ attempt.completed_at|date:"Y-m-d H:i:s" }}<br>
+        <strong>Duration:</strong> {{ duration }}
+        {% if material.is_test %}<br><strong>Score:</strong> {{ attempt.score }} / {{ max_score }}{% endif %}
+    </p>
+
+    {% include "surveys/_attempt_review.html" %}
+
+    <p><a href="{% url 'material_attempts' material.pk %}">Back to attempts</a></p>
+{% endblock %}

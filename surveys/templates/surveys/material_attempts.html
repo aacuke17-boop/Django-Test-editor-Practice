@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Attempts - {{ material.title }} - Questionnaires{% endblock %}
+
+{% block content %}
+    <h1>Attempts: {{ material.title }}</h1>
+
+    {% if rows %}
+        <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Participant</th>
+                    <th>Started</th>
+                    <th>Completed</th>
+                    <th>Duration</th>
+                    {% if material.is_test %}<th>Score</th>{% endif %}
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td>{{ row.participant }}</td>
+                        <td>{{ row.attempt.started_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ row.attempt.completed_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ row.duration }}</td>
+                        {% if material.is_test %}<td>{{ row.attempt.score }} / {{ max_score }}</td>{% endif %}
+                        <td><a href="{% url 'material_attempt_detail' material.pk row.attempt.pk %}">Details</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No one has completed this {% if material.is_test %}test{% else %}survey{% endif %} yet.</p>
+    {% endif %}
+
+    <p><a href="{% url 'my_materials' %}">My materials</a></p>
+{% endblock %}

@@ -1,9 +1,11 @@
-<h2>Review</h2>
+<h2>{% if material.is_test %}Review{% else %}Answers{% endif %}</h2>
 {% for item in review %}
     <fieldset class="review-question">
         <legend>
             {{ forloop.counter }}. {{ item.question.question_text|linebreaksbr }}
-            <span class="review-points">({{ item.earned|floatformat:2 }} / {{ item.question.points|floatformat:2 }})</span>
+            {% if item.earned is not None %}
+                <span class="review-points">({{ item.earned|floatformat:2 }} / {{ item.question.points|floatformat:2 }})</span>
+            {% endif %}
         </legend>
         {% for entry in item.options %}
             <div class="review-option {{ entry.css }}">
