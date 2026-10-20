@@ -8,6 +8,6 @@
         {% csrf_token %}
         {{ form.as_p }}
         <input type="hidden" name="next" value="{{ next }}">
-        <button type="submit">Login</button>
+        <button type="submit" id="id_login_button">Login</button>
     </form>
 {% endblock %}
