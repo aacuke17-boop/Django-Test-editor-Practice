@@ -18,7 +18,10 @@
     {% if has_questions %}
         <form method="post" action="{% url 'attempt_start' material.pk %}">
             {% csrf_token %}
-            <button type="submit">Start</button>
+            <button type="submit">
+                <svg class="icon" aria-hidden="true"><use href="#i-play"></use></svg>
+                Start
+            </button>
         </form>
     {% else %}
         <p>This material has no questions yet.</p>

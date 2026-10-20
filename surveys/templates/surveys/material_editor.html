@@ -13,7 +13,7 @@
             <legend>Questions</legend>
 
             {% if editor_errors %}
-                <ul style="color: #b00020; max-height: 4.5em; overflow-y: auto;">
+                <ul class="editor-errors">
                     {% for error in editor_errors %}
                         <li>{{ error }}</li>
                     {% endfor %}

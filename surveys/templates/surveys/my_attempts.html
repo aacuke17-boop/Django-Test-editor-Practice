@@ -6,34 +6,38 @@
     <h1>My attempts</h1>
 
     {% if rows %}
-        <table border="1" cellpadding="6" cellspacing="0">
+        <table>
             <thead>
                 <tr>
                     <th>Material</th>
                     <th>Type</th>
                     <th>Started</th>
                     <th>Completed</th>
-                    <th>Duration</th>
-                    <th>Result</th>
-                    <th>Actions</th>
+                    <th class="col-num">Duration</th>
+                    <th class="col-num">Result</th>
+                    <th class="actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for row in rows %}
                     <tr>
-                        <td><a href="{% url 'material_detail' row.attempt.form.pk %}">{{ row.attempt.form.title }}</a></td>
-                        <td>{% if row.attempt.form.is_test %}Test{% else %}Survey{% endif %}</td>
+                        <td class="title-cell"><a href="{% url 'material_detail' row.attempt.form.pk %}">{{ row.attempt.form.title }}</a></td>
+                        <td>{% include "surveys/_type_badge.html" with material=row.attempt.form %}</td>
                         <td>{{ row.attempt.started_at|date:"Y-m-d H:i" }}</td>
                         <td>{{ row.attempt.completed_at|date:"Y-m-d H:i" }}</td>
-                        <td>{{ row.duration }}</td>
-                        <td>
+                        <td class="col-num">{{ row.duration }}</td>
+                        <td class="col-num">
                             {% if row.attempt.form.is_test %}
-                                {{ row.attempt.score }} / {{ row.max_score }}
+                                <strong>{{ row.attempt.score }}</strong> / {{ row.max_score }}
                             {% else %}
-                                Completed
+                                <span class="badge badge-public">Completed</span>
                             {% endif %}
                         </td>
-                        <td><a href="{% url 'attempt_result' row.attempt.pk %}">View</a></td>
+                        <td class="actions">
+                            <a class="icon-btn" href="{% url 'attempt_result' row.attempt.pk %}" title="View" aria-label="View">
+                                <svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>
+                            </a>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

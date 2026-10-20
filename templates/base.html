@@ -1,34 +1,43 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Questionnaires{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'surveys/style.css' %}">
 </head>
 <body>
-    <header>
-        <nav>
-            <a href="{% url 'home' %}">Home</a>
-            {% if user.is_authenticated %}
-                <a href="{% url 'my_materials' %}">My materials</a>
-                <a href="{% url 'my_attempts' %}">My attempts</a>
-                <span>Signed in as {{ user.username }}</span>
-                <form method="post" action="{% url 'logout' %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit">Logout</button>
-                </form>
-            {% else %}
-                <a href="{% url 'register' %}">Register</a>
-                <a href="{% url 'login' %}">Login</a>
-            {% endif %}
-        </nav>
-        <hr>
+    {% include "_icons.html" %}
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="{% url 'home' %}">Questionnaires</a>
+            <nav class="nav">
+                <a href="{% url 'home' %}">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'my_materials' %}">My materials</a>
+                    <a href="{% url 'my_attempts' %}">My attempts</a>
+                {% endif %}
+            </nav>
+            <div class="nav-user">
+                {% if user.is_authenticated %}
+                    <span class="user-name">{{ user.username }}</span>
+                    <form method="post" action="{% url 'logout' %}" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}">Login</a>
+                    <a href="{% url 'register' %}">Register</a>
+                {% endif %}
+            </div>
+        </div>
     </header>
-    <main>
+    <main class="container">
         {% if messages %}
-            <ul>
+            <ul class="messages">
                 {% for message in messages %}
-                    <li>{{ message }}</li>
+                    <li class="message {{ message.tags }}">{{ message }}</li>
                 {% endfor %}
             </ul>
         {% endif %}

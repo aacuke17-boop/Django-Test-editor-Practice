@@ -5,42 +5,44 @@
 {% block content %}
     <h1>Results: {{ material.title }}</h1>
 
-    <p>
-        <a href="{% url 'material_export_csv' material.pk %}">Export CSV</a>
-    </p>
+    <div class="toolbar">
+        <a class="btn btn-secondary" href="{% url 'material_export_csv' material.pk %}">
+            <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>
+            Export CSV
+        </a>
+    </div>
 
     {% if stats.total %}
-        <h2>Summary</h2>
-        <table border="1" cellpadding="6" cellspacing="0">
-            <tr>
-                <th>Participants (completed attempts)</th>
-                <td>{{ stats.total }}</td>
-            </tr>
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">Participants (completed attempts)</div>
+            </div>
             {% if material.is_test %}
-                <tr>
-                    <th>Average score</th>
-                    <td>{{ stats.average_score }} / {{ stats.max_score }}</td>
-                </tr>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.average_score }}</div>
+                    <div class="stat-label">Average score (max {{ stats.max_score }})</div>
+                </div>
             {% endif %}
-            <tr>
-                <th>Average duration</th>
-                <td>{{ stats.average_duration }}</td>
-            </tr>
-        </table>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.average_duration }}</div>
+                <div class="stat-label">Average duration</div>
+            </div>
+        </div>
 
         <h2>Questions</h2>
-        <table border="1" cellpadding="6" cellspacing="0">
+        <table>
             <thead>
                 <tr>
                     <th>#</th>
                     <th>Question</th>
                     {% if material.is_test %}
-                        <th>Answered correctly</th>
-                        <th>Answered incorrectly</th>
+                        <th class="col-num">Correct</th>
+                        <th class="col-num">Incorrect</th>
                         <th>% correct</th>
                     {% else %}
-                        <th>Answered</th>
-                        <th>Skipped</th>
+                        <th class="col-num">Answered</th>
+                        <th class="col-num">Skipped</th>
                         <th>% answered</th>
                     {% endif %}
                 </tr>
@@ -50,9 +52,14 @@
                     <tr>
                         <td>{{ forloop.counter }}</td>
                         <td>{{ item.question.question_text|truncatechars:120 }}</td>
-                        <td>{{ item.positive }}</td>
-                        <td>{{ item.negative }}</td>
-                        <td>{{ item.percent|floatformat:0 }}%</td>
+                        <td class="col-num">{{ item.positive }}</td>
+                        <td class="col-num">{{ item.negative }}</td>
+                        <td>
+                            <div class="bar-cell">
+                                <progress class="bar" value="{{ item.percent|floatformat:0 }}" max="100"></progress>
+                                <span>{{ item.percent|floatformat:0 }}%</span>
+                            </div>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -61,12 +68,12 @@
         <h2>Option popularity</h2>
         {% for item in stats.questions %}
             <h3>{{ forloop.counter }}. {{ item.question.question_text|truncatechars:120 }}</h3>
-            <table border="1" cellpadding="6" cellspacing="0">
+            <table>
                 <thead>
                     <tr>
                         <th>Option</th>
                         {% if material.is_test %}<th>Correct option</th>{% endif %}
-                        <th>Selected</th>
+                        <th class="col-num">Selected</th>
                         <th>% of attempts</th>
                     </tr>
                 </thead>
@@ -75,10 +82,15 @@
                         <tr>
                             <td>{{ entry.option.option_text }}</td>
                             {% if material.is_test %}
-                                <td>{% if entry.option.is_correct %}yes{% endif %}</td>
+                                <td>{% if entry.option.is_correct %}<span class="badge badge-public">correct</span>{% endif %}</td>
                             {% endif %}
-                            <td>{{ entry.count }}</td>
-                            <td>{{ entry.percent|floatformat:0 }}%</td>
+                            <td class="col-num">{{ entry.count }}</td>
+                            <td>
+                                <div class="bar-cell">
+                                    <progress class="bar" value="{{ entry.percent|floatformat:0 }}" max="100"></progress>
+                                    <span>{{ entry.percent|floatformat:0 }}%</span>
+                                </div>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -86,15 +98,15 @@
         {% endfor %}
 
         <h2>Attempts</h2>
-        <table border="1" cellpadding="6" cellspacing="0">
+        <table>
             <thead>
                 <tr>
                     <th>Participant</th>
                     <th>Started</th>
                     <th>Completed</th>
-                    <th>Duration</th>
-                    {% if material.is_test %}<th>Score</th>{% endif %}
-                    <th>Actions</th>
+                    <th class="col-num">Duration</th>
+                    {% if material.is_test %}<th class="col-num">Score</th>{% endif %}
+                    <th class="actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -103,9 +115,15 @@
                         <td>{{ row.participant }}</td>
                         <td>{{ row.attempt.started_at|date:"Y-m-d H:i" }}</td>
                         <td>{{ row.attempt.completed_at|date:"Y-m-d H:i" }}</td>
-                        <td>{{ row.duration }}</td>
-                        {% if material.is_test %}<td>{{ row.attempt.score }} / {{ stats.max_score }}</td>{% endif %}
-                        <td><a href="{% url 'material_attempt_detail' material.pk row.attempt.pk %}">Details</a></td>
+                        <td class="col-num">{{ row.duration }}</td>
+                        {% if material.is_test %}
+                            <td class="col-num"><strong>{{ row.attempt.score }}</strong> / {{ stats.max_score }}</td>
+                        {% endif %}
+                        <td class="actions">
+                            <a class="icon-btn" href="{% url 'material_attempt_detail' material.pk row.attempt.pk %}" title="Details" aria-label="Details">
+                                <svg class="icon" aria-hidden="true"><use href="#i-eye"></use></svg>
+                            </a>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

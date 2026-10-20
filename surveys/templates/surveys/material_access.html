@@ -13,18 +13,21 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Grant access</button>
+        <button type="submit">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+            Grant access
+        </button>
     </form>
 
     <h2>Users with access</h2>
     {% if entries %}
-        <table border="1" cellpadding="6" cellspacing="0">
+        <table>
             <thead>
                 <tr>
                     <th>Email</th>
                     <th>Username</th>
                     <th>Granted</th>
-                    <th>Actions</th>
+                    <th class="actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,10 +36,12 @@
                         <td>{{ entry.user.email }}</td>
                         <td>{{ entry.user.username }}</td>
                         <td>{{ entry.granted_at|date:"Y-m-d H:i" }}</td>
-                        <td>
-                            <form method="post" action="{% url 'material_access_revoke' material.pk entry.user_id %}" style="display: inline;">
+                        <td class="actions">
+                            <form method="post" action="{% url 'material_access_revoke' material.pk entry.user_id %}" class="inline-form">
                                 {% csrf_token %}
-                                <button type="submit">Revoke</button>
+                                <button type="submit" class="icon-btn icon-btn-danger" title="Revoke access" aria-label="Revoke access">
+                                    <svg class="icon" aria-hidden="true"><use href="#i-user-x"></use></svg>
+                                </button>
                             </form>
                         </td>
                     </tr>

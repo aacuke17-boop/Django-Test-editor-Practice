@@ -7,14 +7,17 @@
 
     <form method="get" action="{% url 'home' %}">
         <input type="text" name="q" value="{{ query }}" placeholder="Search by title or description">
-        <button type="submit">Search</button>
+        <button type="submit">
+            <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+            Search
+        </button>
         {% if query %}
             <a href="{% url 'home' %}">Clear</a>
         {% endif %}
     </form>
 
     {% if materials %}
-        <table border="1" cellpadding="6" cellspacing="0">
+        <table>
             <thead>
                 <tr>
                     <th>Title</th>
@@ -25,9 +28,9 @@
             <tbody>
                 {% for material in materials %}
                     <tr>
-                        <td><a href="{% url 'material_detail' material.pk %}">{{ material.title }}</a></td>
-                        <td>{% if material.is_test %}Test{% else %}Survey{% endif %}</td>
-                        <td>{% if material.creator %}{{ material.creator.username }}{% else %}Deleted user{% endif %}</td>
+                        <td class="title-cell"><a href="{% url 'material_detail' material.pk %}">{{ material.title }}</a></td>
+                        <td>{% include "surveys/_type_badge.html" %}</td>
+                        <td>{% if material.creator %}{{ material.creator.username }}{% else %}<span class="muted">Deleted user</span>{% endif %}</td>
                     </tr>
                 {% endfor %}
             </tbody>
