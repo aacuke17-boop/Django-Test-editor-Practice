@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Login - Questionnaires{% endblock %}
 
@@ -10,4 +11,8 @@
         <input type="hidden" name="next" value="{{ next }}">
         <button type="submit" id="id_login_button">Login</button>
     </form>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'surveys/app.js' %}"></script>
 {% endblock %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Register - Questionnaires{% endblock %}
 
@@ -9,4 +10,8 @@
         {{ form.as_p }}
         <button type="submit">Register</button>
     </form>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'surveys/app.js' %}"></script>
 {% endblock %}

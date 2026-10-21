@@ -107,6 +107,37 @@
         });
     }
 
+    function initPasswordToggles() {
+    document.querySelectorAll('input[type="password"]').forEach(function (input) {
+        var wrapper = document.createElement("span");
+        wrapper.className = "password-field";
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "password-toggle";
+        wrapper.appendChild(button);
+
+        function render(visible) {
+            var label = visible ? "Hide password" : "Show password";
+            var icon = visible ? "i-eye" : "i-eye-off";
+            button.setAttribute("aria-label", label);
+            button.setAttribute("title", label);
+            button.innerHTML =
+                '<svg class="icon" aria-hidden="true"><use href="#' + icon + '"></use></svg>';
+        }
+
+        render(false);
+
+        button.addEventListener("click", function () {
+            var show = input.type === "password";
+            input.type = show ? "text" : "password";
+            render(show);
+        });
+    });
+}
+
     document.addEventListener("DOMContentLoaded", function () {
         if (document.getElementById("questions-list")) {
             initEditor();
@@ -116,6 +147,9 @@
         }
         if (document.getElementById("attempt-form")) {
             initAttemptForm();
+        }
+        if (document.querySelector('input[type="password"]')) {
+            initPasswordToggles();
         }
     });
 })();

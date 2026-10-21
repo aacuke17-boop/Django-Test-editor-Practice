@@ -705,3 +705,36 @@ dialog.confirm-dialog button[type="submit"] {
         order: 3;
     }
 }
+
+
+.password-field {
+    position: relative;
+    display: block;
+    max-width: 40rem;
+}
+
+.password-field input {
+    padding-right: 2.75rem;
+}
+
+button.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    transform: translateY(-50%);
+}
+
+button.password-toggle:hover {
+    color: var(--primary);
+    background: #eaf1ff;
+}
